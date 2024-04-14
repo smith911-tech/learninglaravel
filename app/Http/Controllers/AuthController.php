@@ -22,10 +22,9 @@ class AuthController extends Controller
         ]);
         $token = $user->createToken('main')->plainTextToken;
 
-
         return response([
             'user' => $user,
-            'token' => $token
+            'token' => $token,
         ]);
     }
     public function login(LoginRequest $request)
@@ -34,12 +33,12 @@ class AuthController extends Controller
         $credentials = $request->validated();
         $remember = $credentials['remember'] ?? false;
         unset($credentials['remember']);
-        if(!Auth::attempt($credentials, $remember)){
+        if (!Auth::attempt($credentials, $remember)) {
             return response([
                 'error' => 'The Provided credentials are not correct'
             ], 422);
         }
-            
+
         $user = Auth::user();
         $token = $user->createToken('main')->plainTextToken;
 
@@ -47,19 +46,16 @@ class AuthController extends Controller
             'user' => $user,
             'token' => $token
         ]);
-        
+
     }
 
     public function logout(Request $request)
     {
-        /** @var User $user  */
-        $user = Auth::user();
+        $user = $request->user();
 
-        //revoke the token that was used to authenticate the current request
+        // Revoke the current user's token
+        $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
 
-        $user->currentAccessToken()->delete();
-        return response([ 
-            'success' => true
-        ]);
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
